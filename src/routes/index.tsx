@@ -17,6 +17,8 @@ import {
   teamNameErrors,
   type Team,
 } from "@/components/tabu/screens";
+import { defaultSettings, type Settings, UNLIMITED_SKIPS } from "@/game/types";
+import { makeT, type TFunc } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,7 +59,7 @@ type SavedGame = {
   skipsLeft: number;
   soundOn: boolean;
   round: number;
-  totalRounds: number;
+  totalRounds?: number;
   usedCardKeys: string[];
 };
 
@@ -88,9 +90,8 @@ function TabuGame() {
     { id: "t1", name: "Equipo 1", score: 0 },
     { id: "t2", name: "Equipo 2", score: 0 },
   ]);
-  const [duration, setDuration] = useState(60);
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [round, setRound] = useState(1);
-  const [totalRounds, setTotalRounds] = useState(3);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [stats, setStats] = useState<Stats>(emptyStats);
@@ -98,13 +99,16 @@ function TabuGame() {
   const [deckPos, setDeckPos] = useState(0);
   const [usedCardKeys, setUsedCardKeys] = useState<Set<string>>(() => new Set());
   const [cardKey, setCardKey] = useState(0);
-  const [categories, setCategories] = useState<CategoryId[]>(ALL_CATEGORIES);
-  const [maxSkips, setMaxSkips] = useState<number>(3);
   const [skipsLeft, setSkipsLeft] = useState<number>(3);
-  const [soundOn, setSoundOn] = useState(true);
   const [customCards, setCustomCards] = useState<TabuCard[]>([]);
   const [savedGame, setSavedGame] = useState<SavedGame | null>(null);
   const [hydrated, setHydrated] = useState(false);
+
+  const patchSettings = useCallback((patch: Partial<Settings>) => {
+    setSettings((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const t = makeT(settings.lang) as TFunc;
 
   /* Mazo del servidor (permite actualizarlo sin re-desplegar) */
   const { data } = useQuery({
@@ -123,10 +127,13 @@ function TabuGame() {
     const saved = loadJSON<SavedGame>(GAME_KEY);
     if (saved && saved.teams?.length) {
       setSavedGame(saved);
-      setCategories(saved.categories ?? ALL_CATEGORIES);
-      setMaxSkips(saved.maxSkips ?? 3);
-      setSoundOn(saved.soundOn ?? true);
-      setDuration(saved.duration ?? 60);
+      setSettings((prev) => ({
+        ...prev,
+        categories: saved.categories ?? ALL_CATEGORIES,
+        maxSkips: saved.maxSkips ?? 3,
+        soundOn: saved.soundOn ?? true,
+        duration: saved.duration ?? 60,
+      }));
     }
     setHydrated(true);
   }, []);
@@ -135,13 +142,13 @@ function TabuGame() {
     const all = [...serverCards, ...customCards];
     const seen = new Set<string>();
     return all.filter((c) => {
-      if (!categories.includes(c.category)) return false;
+      if (!settings.categories.includes(c.category)) return false;
       const key = `${c.category}:${c.word.trim().toLocaleLowerCase("es")}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [serverCards, customCards, categories]);
+  }, [serverCards, customCards, settings.categories]);
 
   const card = deck[deckPos] ?? pool[0] ?? CARDS[0]!;
   const cardId = (c: TabuCard) => `${c.category}:${c.word.trim().toLocaleLowerCase("es")}`;
@@ -174,15 +181,15 @@ function TabuGame() {
     if (phase !== "play") return;
     if (timeLeft === lastTickRef.current) return;
     lastTickRef.current = timeLeft;
-    if (timeLeft > 0 && timeLeft <= 5) playSound("tick", soundOn);
-    if (timeLeft === 10) vibrate(60, soundOn);
-  }, [timeLeft, phase, soundOn]);
+    if (timeLeft > 0 && timeLeft <= 5) playSound("tick", settings.soundOn);
+    if (timeLeft === 10) vibrate(60, settings.soundOn);
+  }, [timeLeft, phase, settings.soundOn]);
 
   /* Fin del turno */
   useEffect(() => {
     if (phase === "play" && timeLeft === 0) {
-      playSound("buzzer", soundOn);
-      vibrate([180, 80, 240], soundOn);
+      playSound("buzzer", settings.soundOn);
+      vibrate([180, 80, 240], settings.soundOn);
       setTeams((prev) =>
         prev.map((t, i) =>
           i === currentIndex ? { ...t, score: t.score + stats.correct - stats.taboo } : t,
@@ -190,7 +197,7 @@ function TabuGame() {
       );
       setPhase("summary");
     }
-  }, [phase, timeLeft, currentIndex, stats, soundOn]);
+  }, [phase, timeLeft, currentIndex, stats, settings.soundOn]);
 
   const newDeck = useCallback(() => shuffle(pool), [pool]);
 
@@ -223,8 +230,8 @@ function TabuGame() {
   const handleResult = (r: "correct" | "taboo" | "skip") => {
     if (r === "skip" && skipsLeft <= 0) return;
     if (r === "skip") setSkipsLeft((s) => (s === Infinity ? s : s - 1));
-    playSound(r, soundOn);
-    vibrate(r === "correct" ? 40 : r === "taboo" ? [60, 50, 60] : 25, soundOn);
+    playSound(r, settings.soundOn);
+    vibrate(r === "correct" ? 40 : r === "taboo" ? [60, 50, 60] : 25, settings.soundOn);
     setStats((s) => ({ ...s, [r]: s[r] + 1 }));
     nextCard();
   };
@@ -232,8 +239,8 @@ function TabuGame() {
   const startTurn = () => {
     primeAudio();
     setStats(emptyStats);
-    setSkipsLeft(maxSkips);
-    setTimeLeft(duration);
+    setSkipsLeft(settings.maxSkips);
+    setTimeLeft(settings.duration);
     setCardKey((k) => k + 1);
     markCurrentCardUsed(card);
     setPhase("play");
@@ -259,17 +266,17 @@ function TabuGame() {
       phase: phase === "play" ? "intro" : phase, // al retomar, se reanuda desde el aviso de turno
       teams,
       currentIndex,
-      duration,
-      timeLeft: duration,
+      duration: settings.duration,
+      timeLeft: settings.duration,
       stats,
       deck,
       deckPos,
-      categories,
-      maxSkips,
+      categories: settings.categories,
+      maxSkips: settings.maxSkips,
       skipsLeft,
-      soundOn,
+      soundOn: settings.soundOn,
       round,
-      totalRounds,
+      totalRounds: settings.totalRounds,
       usedCardKeys: [...usedCardKeys],
     } satisfies SavedGame);
   }, [
@@ -277,16 +284,12 @@ function TabuGame() {
     phase,
     teams,
     currentIndex,
-    duration,
+    settings,
     stats,
     deck,
     deckPos,
-    categories,
-    maxSkips,
     skipsLeft,
-    soundOn,
     round,
-    totalRounds,
     usedCardKeys,
   ]);
 
@@ -299,9 +302,15 @@ function TabuGame() {
     if (!savedGame) return;
     setTeams(savedGame.teams);
     setCurrentIndex(savedGame.currentIndex);
-    setDuration(savedGame.duration);
+    setSettings((prev) => ({
+      ...prev,
+      duration: savedGame.duration,
+      totalRounds: savedGame.totalRounds ?? 3,
+      categories: savedGame.categories ?? ALL_CATEGORIES,
+      maxSkips: savedGame.maxSkips ?? 3,
+      soundOn: savedGame.soundOn ?? true,
+    }));
     setRound(savedGame.round ?? 1);
-    setTotalRounds(savedGame.totalRounds ?? 3);
     setTimeLeft(savedGame.duration);
     setStats(savedGame.stats ?? emptyStats);
     setDeck(savedGame.deck?.length ? savedGame.deck : shuffle(pool));
@@ -317,7 +326,7 @@ function TabuGame() {
     setTeams((prev) => prev.map((t) => ({ ...t, score: 0 })));
     setCurrentIndex(0);
     setRound(1);
-    setTotalRounds(3);
+    setSettings((prev) => ({ ...prev, totalRounds: 3 }));
     setDeck([]);
     setDeckPos(0);
     setUsedCardKeys(new Set());
@@ -335,18 +344,11 @@ function TabuGame() {
             key="setup"
             teams={teams}
             setTeams={setTeams}
-            duration={duration}
-            setDuration={setDuration}
-            rounds={totalRounds}
-            setRounds={setTotalRounds}
-            categories={categories}
-            setCategories={setCategories}
-            maxSkips={maxSkips}
-            setMaxSkips={setMaxSkips}
-            soundOn={soundOn}
-            setSoundOn={setSoundOn}
+            settings={settings}
+            patchSettings={patchSettings}
             customCards={customCards}
             addCustomCard={(c) => setCustomCards((prev) => [...prev, c])}
+            addCustomCards={(cards) => setCustomCards((prev) => [...prev, ...cards])}
             removeCustomCard={(word) =>
               setCustomCards((prev) => prev.filter((c) => c.word !== word))
             }
@@ -360,13 +362,14 @@ function TabuGame() {
               setTeams((prev) => prev.map((t) => ({ ...t, name: t.name.trim(), score: 0 })));
               setCurrentIndex(0);
               setRound(1);
-              setTotalRounds(Math.max(1, Math.min(5, totalRounds)));
+              setSettings((prev) => ({ ...prev, totalRounds: Math.max(1, Math.min(5, settings.totalRounds)) }));
               setDeck(newDeck());
               setDeckPos(0);
               setUsedCardKeys(new Set());
-              setSkipsLeft(maxSkips);
+              setSkipsLeft(settings.maxSkips);
               setPhase("intro");
             }}
+            t={t}
           />
         )}
         {phase === "intro" && (
@@ -374,11 +377,12 @@ function TabuGame() {
             key="intro"
             teams={teams}
             currentIndex={currentIndex}
-            duration={duration}
+            duration={settings.duration}
             round={round}
-            totalRounds={totalRounds}
+            totalRounds={settings.totalRounds}
             onStart={startTurn}
             onFinish={finishGame}
+            t={t}
           />
         )}
         {phase === "play" && (
@@ -387,11 +391,15 @@ function TabuGame() {
             teamName={currentTeam.name}
             teamIndex={currentIndex}
             timeLeft={timeLeft}
-            duration={duration}
+            duration={settings.duration}
             card={card}
             cardKey={cardKey}
             skipsLeft={skipsLeft}
+            bigCards={settings.bigCards}
+            reducedMotion={settings.highContrast}
             onResult={handleResult}
+            teams={teams}
+            t={t}
           />
         )}
         {phase === "summary" && (
@@ -400,13 +408,15 @@ function TabuGame() {
             teams={teams}
             teamIndex={currentIndex}
             stats={stats}
+            stolen={0}
             round={round}
-            totalRounds={totalRounds}
+            totalRounds={settings.totalRounds}
             isRoundEnd={currentIndex === teams.length - 1}
-            isGameEnd={currentIndex === teams.length - 1 && round === totalRounds}
+            isGameEnd={currentIndex === teams.length - 1 && round === settings.totalRounds}
+            history={[]}
             onNext={() => {
               const lastTeam = currentIndex === teams.length - 1;
-              const lastRound = round === totalRounds;
+              const lastRound = round === settings.totalRounds;
               if (lastTeam && lastRound) {
                 setPhase("over");
                 return;
@@ -419,15 +429,17 @@ function TabuGame() {
               }
               setPhase("intro");
             }}
+            t={t}
           />
         )}
         {phase === "over" && (
           <GameOverScreen
             key="over"
             teams={teams}
-            roundsPlayed={totalRounds}
-            totalRounds={totalRounds}
+            totalRounds={settings.totalRounds}
+            history={[]}
             onRestart={restart}
+            t={t}
           />
         )}
       </AnimatePresence>

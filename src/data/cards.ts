@@ -1,4 +1,4 @@
-import { dedupeCards, type TabuCard } from "./card-types";
+import { dedupeCards, type TabuCard, type CategoryId } from "./card-types";
 import { GENERAL_CARDS } from "./categories/general";
 import { DEPORTES_CARDS } from "./categories/deportes";
 import { CINE_CARDS } from "./categories/cine";
@@ -15,6 +15,18 @@ export {
   type CategoryId,
   type TabuCard,
 } from "./card-types";
+
+/** Conteo de cartas por categoría */
+export const CATEGORY_CARD_COUNTS: Record<CategoryId, number> = {
+  general: GENERAL_CARDS.length,
+  deportes: DEPORTES_CARDS.length,
+  cine: CINE_CARDS.length,
+  tecnologia: TECNOLOGIA_CARDS.length,
+  comida: COMIDA_CARDS.length,
+  personajes: PERSONAJES_CARDS.length,
+  naturaleza: NATURALEZA_CARDS.length,
+  custom: 0,
+};
 
 /** Mazo curado local, una fuente por categoría. */
 export const CARDS: TabuCard[] = dedupeCards([

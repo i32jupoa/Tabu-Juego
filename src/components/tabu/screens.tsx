@@ -25,7 +25,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { CATEGORIES, type CategoryId, type TabuCard } from "@/data/cards";
+import { CATEGORIES, CATEGORY_CARD_COUNTS, type CategoryId, type TabuCard } from "@/data/cards";
 import type { Settings, Stats, Team, TurnRecord } from "@/game/types";
 import { UNLIMITED_SKIPS } from "@/game/types";
 import type { TFunc } from "@/lib/i18n";
@@ -303,6 +303,7 @@ export function SetupScreen({
         <div className="flex flex-wrap gap-2">
           {allCategories.map((c) => {
             const active = settings.categories.includes(c.id);
+            const cardCount = c.id === "custom" ? customCards.length : CATEGORY_CARD_COUNTS[c.id];
             return (
               <button
                 key={c.id}
@@ -315,7 +316,7 @@ export function SetupScreen({
                     : "bg-muted text-muted-foreground hover:bg-secondary"
                 }`}
               >
-                {c.emoji} {c.label}
+                {c.emoji} {c.label} <span className="opacity-70">({cardCount})</span>
               </button>
             );
           })}
@@ -352,12 +353,42 @@ export function SetupScreen({
         <h2 className="mb-3 mt-5 flex items-center gap-2 font-display text-xl font-bold">
           <Repeat className="size-5 text-primary" /> {t("rounds")}
         </h2>
-        <OptionGrid
-          options={[1, 2, 3, 4, 5]}
-          value={settings.totalRounds}
-          onChange={(totalRounds) => patchSettings({ totalRounds })}
-          columns="grid-cols-5"
-        />
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 3, 5, 10].map((rounds) => (
+              <button
+                key={rounds}
+                type="button"
+                aria-pressed={settings.totalRounds === rounds}
+                onClick={() => patchSettings({ totalRounds: rounds })}
+                className={`min-h-11 rounded-2xl py-3 font-display text-lg font-bold transition ${
+                  settings.totalRounds === rounds
+                    ? "bg-brand-gradient text-primary-foreground shadow-card"
+                    : "bg-muted text-muted-foreground hover:bg-secondary"
+                }`}
+              >
+                {rounds}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="1"
+              max="99"
+              value={![1, 3, 5, 10].includes(settings.totalRounds) ? settings.totalRounds : ""}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 1 && val <= 99) {
+                  patchSettings({ totalRounds: val });
+                }
+              }}
+              placeholder="Personalizado"
+              className="min-h-11 flex-1 rounded-2xl bg-muted px-4 py-3 font-display text-lg font-bold outline-none placeholder:text-muted-foreground"
+            />
+            <span className="text-xs text-muted-foreground">o escribe un número</span>
+          </div>
+        </div>
         <p className="mt-2 text-xs text-muted-foreground">{t("roundsHint")}</p>
 
         <h2 className="mb-3 mt-5 flex items-center gap-2 font-display text-xl font-bold">
@@ -671,22 +702,32 @@ export function Scoreboard({
   highlight?: number;
   t: TFunc;
 }) {
+  const maxScore = Math.max(...teams.map((t) => t.score));
+  const winners = teams.filter((t) => t.score === maxScore && maxScore > 0);
+
   return (
     <section className="rounded-3xl bg-card p-4 shadow-card">
       <h2 className="mb-2 px-1 font-display text-lg font-bold">{t("scores")}</h2>
       <ul className="flex flex-col gap-1">
-        {teams.map((team, i) => (
-          <li
-            key={team.id}
-            className={`flex items-center gap-3 rounded-2xl px-3 py-2 ${
-              i === highlight ? "bg-secondary" : ""
-            }`}
-          >
-            <span className={`size-3 shrink-0 rounded-full bg-gradient-to-br ${teamAccent(i)}`} />
-            <span className="flex-1 truncate font-semibold">{team.name}</span>
-            <span className="font-display text-xl font-bold">{team.score}</span>
-          </li>
-        ))}
+        {teams.map((team, i) => {
+          const isWinner = winners.includes(team) && maxScore > 0;
+          const isHighlight = i === highlight;
+          return (
+            <li
+              key={team.id}
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 ${
+                isHighlight ? "bg-secondary" : ""
+              } ${isWinner ? "ring-2 ring-primary" : ""}`}
+            >
+              <span className={`size-3 shrink-0 rounded-full bg-gradient-to-br ${teamAccent(i)}`} />
+              <span className="flex-1 truncate font-semibold">
+                {team.name}
+                {isWinner && <Trophy className="ml-1 inline size-4 text-primary" />}
+              </span>
+              <span className="font-display text-xl font-bold">{team.score}</span>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -733,6 +774,7 @@ export function PlayScreen({
   bigCards,
   reducedMotion,
   onResult,
+  teams,
   t,
 }: {
   teamName: string;
@@ -745,6 +787,7 @@ export function PlayScreen({
   bigCards: boolean;
   reducedMotion: boolean;
   onResult: (r: keyof Stats) => void;
+  teams: Team[];
   t: TFunc;
 }) {
   const urgent = timeLeft <= 10;
@@ -797,6 +840,8 @@ export function PlayScreen({
           {String(Math.floor(timeLeft / 60))}:{String(timeLeft % 60).padStart(2, "0")}
         </span>
       </header>
+
+      <Scoreboard teams={teams} highlight={teamIndex} t={t} />
 
       {/* Señal accesible del tiempo: no depende solo del color */}
       <p aria-live="assertive" className="sr-only">
