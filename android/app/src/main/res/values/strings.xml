@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tabu</string>
+    <string name="title_activity_main">Tabu</string>
+    <string name="package_name">com.tabu.game</string>
+    <string name="custom_url_scheme">com.tabu.game</string>
+</resources>

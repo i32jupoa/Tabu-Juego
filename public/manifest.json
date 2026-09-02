@@ -1,0 +1,26 @@
+{
+  "name": "Tabú - Juego de palabras prohibidas",
+  "short_name": "Tabú",
+  "description": "Juega al clásico Tabú con 2 a 5 equipos: cartas por temáticas, mazos personalizados, cronómetro y marcador automático.",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay"],
+  "background_color": "#ffffff",
+  "theme_color": "#ff6b6b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"]
+}

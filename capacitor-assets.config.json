@@ -1,0 +1,22 @@
+{
+  "icon": {
+    "source": "public/icon-512.png",
+    "platforms": [
+      "android"
+    ],
+    "android": {
+      "iconType": "adaptive",
+      "backgroundColor": "#ff6b6b"
+    }
+  },
+  "splash": {
+    "source": "public/icon-512.png",
+    "platforms": [
+      "android"
+    ],
+    "android": {
+      "backgroundColor": "#ff6b6b",
+      "splashScreenDensity": "land-mdpi"
+    }
+  }
+}
