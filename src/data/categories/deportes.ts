@@ -1,11 +1,11 @@
 import type { TabuCard } from "../card-types";
 
 export const DEPORTES_CARDS: TabuCard[] = [
-  { word: "Fútbol", forbidden: ["Balón", "Portería", "Gol", "Equipo", "Once"], category: "deportes" },
+  { word: "Fútbol", forbidden: ["Balón", "Portería", "Gol", "Equipo", "Messi"], category: "deportes" },
   { word: "Baloncesto", forbidden: ["Canasta", "Balón", "NBA", "Botar", "Triple"], category: "deportes" },
-  { word: "Tenis", forbidden: ["Raqueta", "Pelota", "Red", "Saque", "Set"], category: "deportes" },
+  { word: "Tenis", forbidden: ["Raqueta", "Pelota", "Red", "Nadal", "Set"], category: "deportes" },
   { word: "Natación", forbidden: ["Piscina", "Agua", "Nadar", "Estilos", "Bañador"], category: "deportes" },
-  { word: "Maratón", forbidden: ["Correr", "Cuarenta y dos", "Kilómetros", "Meta", "Carrera"], category: "deportes" },
+  { word: "Maratón", forbidden: ["Correr", "42", "Kilómetros", "Meta", "Carrera"], category: "deportes" },
   { word: "Portero", forbidden: ["Guantes", "Parar", "Portería", "Fútbol", "Penalti"], category: "deportes" },
   { word: "Ciclismo", forbidden: ["Bici", "Tour", "Pedalear", "Etapa", "Maillot"], category: "deportes" },
   { word: "Boxeo", forbidden: ["Guantes", "Ring", "Puñetazo", "Asalto", "KO"], category: "deportes" },
@@ -19,7 +19,7 @@ export const DEPORTES_CARDS: TabuCard[] = [
   { word: "Waterpolo", forbidden: ["Piscina", "Balón", "Nadar", "Equipo", "Portería"], category: "deportes" },
   { word: "Balonmano", forbidden: ["Balón", "Portería", "Equipo", "Lanzar", "Cancha"], category: "deportes" },
   { word: "Rugby", forbidden: ["Balón", "Ovalado", "Placaje", "Equipo", "Try"], category: "deportes" },
-  { word: "Béisbol", forbidden: ["Bate", "Pelota", "Guante", "Base", "Diamante"], category: "deportes" },
+  { word: "Béisbol", forbidden: ["Bate", "Pelota", "Guante", "Base", "EEUU"], category: "deportes" },
   { word: "Fórmula 1", forbidden: ["Coche", "Circuito", "Piloto", "Carrera", "Velocidad"], category: "deportes" },
   { word: "Kárate", forbidden: ["Cinturón", "Patada", "Golpe", "Kimono", "Artes marciales"], category: "deportes" },
   { word: "Judo", forbidden: ["Kimono", "Cinturón", "Lanzar", "Tatami", "Artes marciales"], category: "deportes" },
@@ -39,7 +39,7 @@ export const DEPORTES_CARDS: TabuCard[] = [
   { word: "Lanzamiento de jabalina", forbidden: ["Lanzar", "Atleta", "Campo", "Distancia", "Palo"], category: "deportes" },
   { word: "Entrenador", forbidden: ["Equipo", "Dirigir", "Deporte", "Táctica", "Jugadores"], category: "deportes" },
   { word: "Vestuario", forbidden: ["Equipo", "Cambiarse", "Ducha", "Deportistas", "Taquillas"], category: "deportes" },
-  { word: "Tarjeta roja", forbidden: ["Árbitro", "Fútbol", "Expulsión", "Falta", "Amarilla"], category: "deportes" },
+  { word: "Tarjeta roja", forbidden: ["Árbitro", "Fútbol", "Expulsión", "Falta", "Roja"], category: "deportes" },
   { word: "Penalti", forbidden: ["Fútbol", "Portero", "Falta", "Área", "Lanzar"], category: "deportes" },
   { word: "Fuera de juego", forbidden: ["Fútbol", "Árbitro", "Regla", "Delantero", "Defensa"], category: "deportes" },
   { word: "Descuento", forbidden: ["Fútbol", "Árbitro", "Tiempo", "Añadido", "Partido"], category: "deportes" },
