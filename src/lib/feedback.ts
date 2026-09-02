@@ -13,6 +13,11 @@ function getCtx(): AudioContext | null {
   return ctx;
 }
 
+/** Desbloquea el audio en el primer gesto del usuario (política de autoplay). */
+export function primeAudio() {
+  getCtx();
+}
+
 function tone(freq: number, duration: number, type: OscillatorType = "sine", gain = 0.12) {
   const ac = getCtx();
   if (!ac) return;
@@ -52,6 +57,7 @@ export function playSound(name: SoundName, enabled = true) {
   }
 }
 
+/** Vibración: se controla con su propio ajuste, independiente del sonido. */
 export function vibrate(pattern: number | number[], enabled = true) {
   if (!enabled || typeof navigator === "undefined" || !("vibrate" in navigator)) return;
   try {
@@ -61,7 +67,8 @@ export function vibrate(pattern: number | number[], enabled = true) {
   }
 }
 
-/** Desbloquea el audio en móviles (llamar desde un click). */
-export function primeAudio() {
-  getCtx();
+/** Respeta la preferencia del sistema de movimiento reducido. */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
