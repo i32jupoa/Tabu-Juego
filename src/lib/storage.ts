@@ -26,5 +26,8 @@ export function removeKey(key: string) {
   }
 }
 
-export const GAME_KEY = "tabu:game:v1";
+/** v2: estado del juego basado en semilla + posición (sin serializar el mazo). */
+export const GAME_KEY = "tabu:game:v2";
+export const LEGACY_GAME_KEY = "tabu:game:v1";
 export const CUSTOM_CARDS_KEY = "tabu:custom-cards:v1";
+export const SETTINGS_KEY = "tabu:settings:v1";
